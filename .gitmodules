@@ -1,0 +1,6 @@
+[submodule "openssl"]
+	path = openssl
+	url = https://github.com/openssl/openssl.git
+[submodule "comp_bench"]
+	path = comp_bench
+	url = https://github.com/vkrasnov/comp_bench.git
