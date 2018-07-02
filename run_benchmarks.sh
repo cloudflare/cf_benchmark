@@ -1,6 +1,10 @@
 #!/bin/bash
 
-out=`pwd`/$1
+if [ -z "$1" ]; then
+	out=`pwd`/results.csv
+else
+	out=`pwd`/$1
+fi
 
 echo $out
 
@@ -25,7 +29,7 @@ fi
 cd ..
 
 # Build lua bench
-cd lua_bench
+cd bench_lua
 if [ ! -f ./bench ]; then
 	make
 fi
@@ -53,7 +57,17 @@ comp () {
 	echo $res MiB/s
 }
 
+lua () {
+	res=`./bench_lua/bench -c $2 ./bench_lua/$1 | tail -1 | cut -f 2 -d' '`
+	echo $res ops/s
+}
+
 echo benchmark,1 core,$nprocs cores | tee $out
+
+echo "LuaJIT performance" | tee -a $out
+for f in binary_trees.lua fasta.lua  fibonacci.lua mandelbrot.lua  n_body.lua  spectral.lua; do
+	echo lua $f,$( lua $f 1 ),$( lua $f $nprocs ) | tee -a $out
+done
 
 echo "brotli performance" | tee -a $out
 for q in {4..11}; do

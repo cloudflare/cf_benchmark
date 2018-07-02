@@ -4,3 +4,6 @@
 [submodule "comp_bench"]
 	path = comp_bench
 	url = https://github.com/vkrasnov/comp_bench.git
+[submodule "bench_lua"]
+	path = bench_lua
+	url = https://github.com/vkrasnov/bench_lua
