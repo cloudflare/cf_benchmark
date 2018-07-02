@@ -64,21 +64,6 @@ lua () {
 
 echo benchmark,1 core,$nprocs cores | tee $out
 
-echo "LuaJIT performance" | tee -a $out
-for f in binary_trees.lua fasta.lua  fibonacci.lua mandelbrot.lua  n_body.lua  spectral.lua; do
-	echo lua $f,$( lua $f 1 ),$( lua $f $nprocs ) | tee -a $out
-done
-
-echo "brotli performance" | tee -a $out
-for q in {4..11}; do
-	echo brotli -$q,$( comp $q 1 -b),$( comp $q $nprocs -b ) | tee -a $out
-done
-
-echo "gzip performance (cloudflare zlib)" | tee -a $out
-for q in {4..9}; do
-	echo gzip -$q,$( comp $q 1 ),$( comp $q $nprocs ) | tee -a $out
-done
-
 echo openssl pki performance | tee -a $out
 for sig in ecdsap256 rsa2048 rsa3072; do
 	echo $sig Sign,$( openssl_sign $sig 1), $( openssl_sign $sig $nprocs) | tee -a $out
@@ -94,3 +79,20 @@ for aead in aes-128-gcm aes-256-gcm chacha20-poly1305; do
 	echo $aead,$( openssl_aead $aead 1 ), $( openssl_aead $aead $nprocs ) | tee -a $out
 done
 
+echo "LuaJIT performance" | tee -a $out
+for f in binary_trees.lua fasta.lua  fibonacci.lua mandelbrot.lua  n_body.lua  spectral.lua; do
+	echo lua $f,$( lua $f 1 ),$( lua $f $nprocs ) | tee -a $out
+done
+
+echo "brotli performance" | tee -a $out
+for q in {4..11}; do
+	echo brotli -$q,$( comp $q 1 -b),$( comp $q $nprocs -b ) | tee -a $out
+done
+
+echo "gzip performance (cloudflare zlib)" | tee -a $out
+for q in {4..9}; do
+	echo gzip -$q,$( comp $q 1 ),$( comp $q $nprocs ) | tee -a $out
+done
+
+echo "Go performance" | tee -a $out
+go run ./go_benchmarks.go | tee -a $out
