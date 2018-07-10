@@ -10,9 +10,12 @@ echo $out
 
 nprocs=`cat /proc/cpuinfo | awk '/^processor/{print $3}' | wc -l`
 
-sudo apt-get install -y build-essential bc
+sudo apt-get install -y build-essential bc golang
+
+export GOPATH="$(dirname "$(readlink -f "$0")")"
 
 git submodule update --init --recursive
+go get -u -v golang.org/x/crypto/chacha20poly1305/...
 
 # Build openssl
 cd openssl
