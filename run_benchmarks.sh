@@ -10,6 +10,10 @@ echo $out
 
 nprocs=`cat /proc/cpuinfo | awk '/^processor/{print $3}' | wc -l`
 
+if [ ! -z "$MALLOC_TRIM_THRESHOLD_" ]; then
+	old_trim_threshold=$MALLOC_TRIM_THRESHOLD_
+fi
+
 sudo apt-get install -y build-essential bc golang
 
 export GOPATH="$(dirname "$(readlink -f "$0")")"
@@ -38,6 +42,17 @@ if [ ! -f ./bench ]; then
 fi
 cd ..
 
+disable_malloc_trim_threshold () {
+	export MALLOC_TRIM_THRESHOLD_=-1
+}
+
+restore_malloc_trim_threshold () {
+	if [ ! -z "$old_trim_threshold" ]; then
+		export MALLOC_TRIM_THRESHOLD_=$old_trim_threshold
+	else
+		unset MALLOC_TRIM_THRESHOLD_
+	fi
+}
 
 openssl_aead () {
 	res=`./openssl/apps/openssl speed -seconds 10 -bytes 16384 -multi $2 -evp $1 | tail -1  | rev | cut -f 1 -d ' ' | rev | sed 's/k//' `
@@ -93,9 +108,11 @@ for q in {4..11}; do
 done
 
 echo "gzip performance (cloudflare zlib)" | tee -a $out
+disable_malloc_trim_threshold
 for q in {4..9}; do
 	echo gzip -$q,$( comp $q 1 ),$( comp $q $nprocs ) | tee -a $out
 done
+restore_malloc_trim_threshold
 
 echo "Go performance" | tee -a $out
 go run ./go_benchmarks.go | tee -a $out
