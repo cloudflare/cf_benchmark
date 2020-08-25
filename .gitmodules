@@ -1,3 +1,6 @@
+[submodule "boringssl"]
+	path = boringssl
+	url = https://boringssl.googlesource.com/boringssl
 [submodule "openssl"]
 	path = openssl
 	url = https://github.com/openssl/openssl.git

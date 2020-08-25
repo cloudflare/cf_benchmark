@@ -10,7 +10,7 @@ echo $out
 
 nprocs=`cat /proc/cpuinfo | awk '/^processor/{print $3}' | wc -l`
 
-sudo apt-get install -y build-essential bc golang
+sudo apt-get install -y build-essential bc golang jq
 
 export GOPATH="$(dirname "$(readlink -f "$0")")"
 
@@ -21,6 +21,13 @@ go get -u -v golang.org/x/crypto/chacha20poly1305/...
 cd openssl
 if [ ! -f ./apps/openssl ]; then
 	./config no-shared && make -j
+fi
+cd ..
+
+# Build boringssl
+cd boringssl
+if [ ! -f ./tool/bssl ]; then
+	cmake . && make -j
 fi
 cd ..
 
@@ -38,6 +45,25 @@ if [ ! -f ./bench ]; then
 fi
 cd ..
 
+boringssl_sign_verify () {
+    q='.[] | select(.description|contains("signing") or contains("verify"))'
+	q+='   | (.description|ascii_downcase|gsub("signing|verify| |-";""))'
+	q+='     + if   (.description|contains("signing")) then " Sign,"'
+	q+='       elif (.description|contains("verify"))  then " Verify,"'
+	q+='       else empty end'
+	q+='     + (1e6*.numCalls/.microseconds|floor|tostring)'
+	q+='     + " ops/s"'
+	./boringssl/tool/bssl speed -json -timeout 10 -filter $1 | jq -r "$q"
+}
+
+boringssl_kex () {
+    q='.[] | select(.description|contains("ECDH") or contains("arbitrary"))'
+	q+='   | (.description|ascii_downcase|gsub("arbitrary|point|multiplication| |-";""))'
+	q+='     + " Key-Exchange,"'
+	q+='     + (1e6*.numCalls/.microseconds|floor|tostring)'
+	q+='     + " ops/s"'
+	./boringssl/tool/bssl speed -json -timeout 10 -filter $1 | jq -r "$q"
+}
 
 openssl_aead () {
 	res=`./openssl/apps/openssl speed -seconds 10 -bytes 16384 -multi $2 -evp $1 | tail -1  | rev | cut -f 1 -d ' ' | rev | sed 's/k//' `
@@ -51,7 +77,7 @@ openssl_sign () {
 }
 
 openssl_verify () {
-	res=`./openssl/apps/openssl speed -seconds 10 -multi $2 $1 | tail -1  | tr -s ' ' | rev | cut -f 1 -d ' ' | rev` 
+	res=`./openssl/apps/openssl speed -seconds 10 -multi $2 $1 | tail -1  | tr -s ' ' | rev | cut -f 1 -d ' ' | rev`
 	echo $res ops/s
 }
 
@@ -66,6 +92,15 @@ lua () {
 }
 
 echo benchmark,1 core,$nprocs cores | tee $out
+
+echo boringssl pki performance | tee -a $out
+for sig in RSA ECDSA Ed25519; do
+	boringssl_sign_verify $sig | tee -a $out
+done
+
+for kx in ECDH Curve25519; do
+	boringssl_kex $kx | tee -a $out
+done
 
 echo openssl pki performance | tee -a $out
 for sig in ecdsap256 rsa2048 rsa3072; do
