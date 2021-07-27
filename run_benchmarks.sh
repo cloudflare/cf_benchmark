@@ -10,7 +10,13 @@ echo $out
 
 nprocs=`cat /proc/cpuinfo | awk '/^processor/{print $3}' | wc -l`
 
-sudo apt-get install -y build-essential bc golang
+if [ -x /usr/bin/apt-get ] || [ -x /usr/bin/apt ]; then
+       sudo apt-get install -y build-essential bc golang
+elif [ -x /usr/bin/rpm ] || [ -x /usr/bin/dnf ]; then
+       sudo dnf install -y golang
+elif [ -x /usr/bin/pacman ]; then
+       sudo pacman --noconfirm -S go
+fi
 
 export GOPATH="$(dirname "$(readlink -f "$0")")"
 
