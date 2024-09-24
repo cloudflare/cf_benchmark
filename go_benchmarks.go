@@ -13,7 +13,7 @@ import (
 	"crypto/sha256"
 	"flag"
 	"fmt"
-	"golang.org/x/crypto/chacha20poly1305"
+	"pkg.go.dev/golang.org/x/crypto/chacha20poly1305"
 	"html"
 	"io"
 	"io/ioutil"
