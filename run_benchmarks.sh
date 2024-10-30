@@ -11,9 +11,9 @@ echo $out
 nprocs=`cat /proc/cpuinfo | awk '/^processor/{print $3}' | wc -l`
 
 if [ -x /usr/bin/apt-get ] || [ -x /usr/bin/apt ]; then
-       sudo apt-get install -y build-essential bc golang
+       sudo apt-get install -y build-essential bc golang-1.15
 elif [ -x /usr/bin/rpm ] || [ -x /usr/bin/dnf ]; then
-       sudo dnf install -y golang
+       sudo dnf install -y golang-1.15
 elif [ -x /usr/bin/pacman ]; then
        sudo pacman --noconfirm -S go
 fi
